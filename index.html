@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover lets us read env(safe-area-inset-*) on notched devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b1f">
+  <meta name="description" content="Tap the Golden Snitch before time runs out.">
+  <title>Golden Snitch</title>
+
+  <!-- Home-screen install: launches full-screen instead of in a browser tab.
+       black-translucent puts the status bar over our background, which is why
+       the HUD carries env(safe-area-inset-top) padding. -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Golden Snitch">
+
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-180.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ============ Screen 1: Start Menu ============ -->
+    <section id="screen-start" class="screen is-active">
+      <div class="panel">
+        <h1 class="title">
+          <span class="title-line">Golden</span>
+          <span class="title-line title-line--accent">Snitch</span>
+        </h1>
+        <p class="tagline">Tap the Golden Snitch before time runs out!</p>
+
+        <!-- Static preview of the Snitch so the menu shows what to look for -->
+        <div class="snitch-preview" aria-hidden="true">
+          <div class="snitch snitch--static">
+            <span class="snitch-wing snitch-wing--left"></span>
+            <span class="snitch-wing snitch-wing--right"></span>
+            <span class="snitch-body"></span>
+          </div>
+        </div>
+
+        <button id="btn-start" class="btn" type="button">Start Game</button>
+        <p class="hint">60 seconds &middot; it gets faster as you score</p>
+      </div>
+    </section>
+
+    <!-- ============ Screen 2: Game ============ -->
+    <section id="screen-game" class="screen">
+      <header id="hud">
+        <div class="hud-item">
+          <span class="hud-label">Score</span>
+          <span id="score" class="hud-value">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Best</span>
+          <span id="high-score" class="hud-value">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Time</span>
+          <span id="timer" class="hud-value">60</span>
+        </div>
+      </header>
+
+      <!-- Gameplay boundary: the Snitch is positioned within this box only -->
+      <div id="playfield">
+        <div id="snitch" class="snitch" role="button" aria-label="Golden Snitch">
+          <span class="snitch-wing snitch-wing--left"></span>
+          <span class="snitch-wing snitch-wing--right"></span>
+          <span class="snitch-body"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Screen 3: Game Over ============ -->
+    <section id="screen-gameover" class="screen">
+      <div class="panel">
+        <h2 class="subtitle">Time's Up</h2>
+
+        <div class="result">
+          <span class="result-label">Snitches caught</span>
+          <span id="final-score" class="result-score">0</span>
+        </div>
+
+        <!-- Exactly one of these is revealed by app.js -->
+        <p id="record-new" class="record record--new" hidden>New personal best!</p>
+        <p id="record-old" class="record" hidden>Best: <span id="record-best">0</span></p>
+
+        <button id="btn-restart" class="btn" type="button">Play Again</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

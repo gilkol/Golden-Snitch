@@ -45,7 +45,8 @@
         </div>
 
         <button id="btn-start" class="btn" type="button">Start Game</button>
-        <p class="hint">60 seconds &middot; it gets faster as you score</p>
+        <button id="btn-scores" class="btn btn--secondary" type="button">High Scores</button>
+        <p class="hint">40 seconds &middot; it gets faster as you score</p>
       </div>
     </section>
 
@@ -62,7 +63,7 @@
         </div>
         <div class="hud-item">
           <span class="hud-label">Time</span>
-          <span id="timer" class="hud-value">60</span>
+          <span id="timer" class="hud-value">40</span>
         </div>
       </header>
 
@@ -78,7 +79,7 @@
 
     <!-- ============ Screen 3: Game Over ============ -->
     <section id="screen-gameover" class="screen">
-      <div class="panel">
+      <div class="panel panel--dense">
         <h2 class="subtitle">Time's Up</h2>
 
         <div class="result">
@@ -86,11 +87,38 @@
           <span id="final-score" class="result-score">0</span>
         </div>
 
-        <!-- Exactly one of these is revealed by app.js -->
-        <p id="record-new" class="record record--new" hidden>New personal best!</p>
-        <p id="record-old" class="record" hidden>Best: <span id="record-best">0</span></p>
+        <!-- Shown only when the run earned a place in the top 10. -->
+        <form id="name-entry" class="name-entry" hidden>
+          <label class="record record--new" for="name-input">New high score! Enter your name</label>
+          <div class="name-entry-row">
+            <input id="name-input" class="name-input" type="text"
+                   maxlength="10" placeholder="Your name"
+                   autocomplete="off" autocapitalize="characters"
+                   spellcheck="false" enterkeyhint="done">
+            <button class="btn btn--compact" type="submit">Save</button>
+          </div>
+        </form>
+
+        <!-- Replaces the form once the name is committed. -->
+        <p id="saved-note" class="record record--new" hidden></p>
+
+        <!-- Shown instead of the form when the run missed the table. -->
+        <p id="no-record" class="record" hidden>Better Luck Next Time!</p>
+
+        <h3 class="scores-heading">Top 10</h3>
+        <ol id="gameover-scores" class="scores"></ol>
 
         <button id="btn-restart" class="btn" type="button">Play Again</button>
+      </div>
+    </section>
+
+    <!-- ============ Screen 4: High Scores ============ -->
+    <section id="screen-scores" class="screen">
+      <div class="panel panel--dense">
+        <h2 class="subtitle">High Scores</h2>
+        <ol id="scores-list" class="scores"></ol>
+        <p id="scores-empty" class="hint" hidden>No scores yet &mdash; go catch some Snitches!</p>
+        <button id="btn-scores-back" class="btn btn--secondary" type="button">Back</button>
       </div>
     </section>
 

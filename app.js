@@ -10,17 +10,21 @@
      Config — every tunable number lives here.
      ------------------------------------------------------------------------ */
   const CONFIG = {
-    gameDurationMs: 60000,
-    baseTeleportMs: 800,
-    teleportStepMs: 20,     // shaved off the interval per point scored
-    minTeleportMs: 400,     // difficulty floor
+    gameDurationMs: 40000,
+    baseTeleportMs: 1000,
+    teleportStepMs: 10,     // shaved off the interval per point scored
+    minTeleportMs: 600,     // difficulty floor, reached at 40 points
     minJumpPx: 80,          // consecutive teleports must read as movement
     edgePaddingPx: 8,       // keeps the Snitch's glow clear of the clipped edges
     placementTries: 12,     // attempts to satisfy minJumpPx before giving up
     urgentAtSeconds: 10,    // when the timer turns red
     burstSparks: 6,
     burstLifetimeMs: 500,   // must outlast the CSS spark/ring animations
-    storageKey: 'goldenSnitch.highScore',
+    maxScores: 10,          // table length; 11th place is forgotten
+    maxNameLength: 10,
+    defaultName: 'ANON',    // used when the name field is left blank
+    scoresKey: 'goldenSnitch.scores',
+    legacyScoreKey: 'goldenSnitch.highScore', // pre-table number, purged on boot
   };
 
   /* ------------------------------------------------------------------------
@@ -28,7 +32,8 @@
      ------------------------------------------------------------------------ */
   const state = {
     score: 0,
-    highScore: 0,
+    /** score awaiting a name; 0 when there is nothing pending */
+    pendingScore: 0,
     running: false,
     /** ms of gameplay left; decremented by the loop, frozen while hidden. */
     remainingMs: CONFIG.gameDurationMs,
@@ -51,6 +56,7 @@
     start: document.getElementById('screen-start'),
     game: document.getElementById('screen-game'),
     gameover: document.getElementById('screen-gameover'),
+    scores: document.getElementById('screen-scores'),
   };
 
   const el = {
@@ -60,34 +66,108 @@
     highScore: document.getElementById('high-score'),
     timer: document.getElementById('timer'),
     finalScore: document.getElementById('final-score'),
-    recordNew: document.getElementById('record-new'),
-    recordOld: document.getElementById('record-old'),
-    recordBest: document.getElementById('record-best'),
+    nameEntry: document.getElementById('name-entry'),
+    nameInput: document.getElementById('name-input'),
+    savedNote: document.getElementById('saved-note'),
+    noRecord: document.getElementById('no-record'),
+    gameoverScores: document.getElementById('gameover-scores'),
+    scoresList: document.getElementById('scores-list'),
+    scoresEmpty: document.getElementById('scores-empty'),
     btnStart: document.getElementById('btn-start'),
     btnRestart: document.getElementById('btn-restart'),
+    btnScores: document.getElementById('btn-scores'),
+    btnScoresBack: document.getElementById('btn-scores-back'),
   };
 
   /* ------------------------------------------------------------------------
-     High-score storage
-     localStorage throws in private-mode Safari and when quota is exhausted,
-     so every access is guarded; the in-memory value keeps the game working.
+     Score table
+     Held in memory and mirrored to localStorage. Every storage access is
+     guarded because localStorage throws in private-mode Safari and when the
+     quota is exhausted; the in-memory copy keeps the game playable either way.
+     Always kept sorted high-to-low and capped at CONFIG.maxScores.
      ------------------------------------------------------------------------ */
-  function loadHighScore() {
+  let scores = [];
+
+  /** Trim a name to something safe and bounded, or fall back to a default. */
+  function sanitizeName(raw) {
+    const cleaned = String(raw == null ? '' : raw)
+      .replace(/[\u0000-\u001f\u007f]/g, '') // strip control characters
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, CONFIG.maxNameLength);
+    return cleaned || CONFIG.defaultName;
+  }
+
+  /** Accept an entry only if it survives validation, so bad data can't render. */
+  function parseEntry(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const score = Number.parseInt(raw.score, 10);
+    if (!Number.isFinite(score) || score <= 0) return null;
+    return { name: sanitizeName(raw.name), score: score };
+  }
+
+  function loadScores() {
+    let list = [];
+
     try {
-      const raw = window.localStorage.getItem(CONFIG.storageKey);
-      const parsed = Number.parseInt(raw, 10);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+      const parsed = JSON.parse(window.localStorage.getItem(CONFIG.scoresKey));
+      if (Array.isArray(parsed)) list = parsed.map(parseEntry).filter(Boolean);
     } catch (err) {
-      return 0;
+      list = [];
+    }
+
+    list.sort(function (a, b) { return b.score - a.score; });
+    return list.slice(0, CONFIG.maxScores);
+  }
+
+  /**
+   * The pre-table version stored a single unnamed number. It is deliberately
+   * not carried over, so the named table starts empty; remove it so it cannot
+   * linger in storage or be picked up again later.
+   */
+  function purgeLegacyScore() {
+    try {
+      window.localStorage.removeItem(CONFIG.legacyScoreKey);
+    } catch (err) {
+      /* Nothing we can do, and nothing depends on it. */
     }
   }
 
-  function saveHighScore(value) {
+  function persistScores() {
     try {
-      window.localStorage.setItem(CONFIG.storageKey, String(value));
+      window.localStorage.setItem(CONFIG.scoresKey, JSON.stringify(scores));
     } catch (err) {
-      /* Non-fatal: state.highScore still holds for this session. */
+      /* Non-fatal: the table still holds for this session. */
     }
+  }
+
+  function topScore() {
+    return scores.length ? scores[0].score : 0;
+  }
+
+  /** Earns a place if the table has room or the score beats the last entry. */
+  function qualifies(score) {
+    if (score <= 0) return false;
+    if (scores.length < CONFIG.maxScores) return true;
+    return score > scores[scores.length - 1].score;
+  }
+
+  /** Rank a score would take. Ties sit behind equal scores set earlier. */
+  function rankFor(score) {
+    const at = scores.findIndex(function (entry) { return score > entry.score; });
+    return at === -1 ? scores.length : at;
+  }
+
+  /**
+   * Insert in rank order and drop anything pushed past the last place.
+   * Returns the new entry's index, or -1 if it landed outside the table.
+   */
+  function insertScore(name, score) {
+    const index = rankFor(score);
+    scores.splice(index, 0, { name: name, score: score });
+    scores = scores.slice(0, CONFIG.maxScores);
+    persistScores();
+    return index < CONFIG.maxScores ? index : -1;
   }
 
   /* ------------------------------------------------------------------------
@@ -97,6 +177,88 @@
     Object.keys(screens).forEach(function (key) {
       screens[key].classList.toggle('is-active', key === name);
     });
+  }
+
+  /* ------------------------------------------------------------------------
+     Score table rendering
+     ------------------------------------------------------------------------ */
+
+  /**
+   * Paint a score table into a list element.
+   *
+   * `options.pending` injects the just-finished run at its would-be rank so the
+   * player can see where they landed before committing a name. `options.
+   * highlight` instead marks an index that is already in the table.
+   */
+  function renderScores(listEl, options) {
+    const opts = options || {};
+
+    const rows = scores.map(function (entry) {
+      return { name: entry.name, score: entry.score, isNew: false };
+    });
+
+    if (opts.pending) {
+      rows.splice(rankFor(opts.pending.score), 0, {
+        name: opts.pending.name,
+        score: opts.pending.score,
+        isNew: true,
+      });
+    } else if (typeof opts.highlight === 'number' && rows[opts.highlight]) {
+      rows[opts.highlight].isNew = true;
+    }
+
+    listEl.textContent = ''; // clear previous rows
+
+    rows.slice(0, CONFIG.maxScores).forEach(function (row, i) {
+      const li = document.createElement('li');
+      li.className = 'score-row' + (row.isNew ? ' score-row--new' : '');
+
+      const rank = document.createElement('span');
+      rank.className = 'score-rank';
+      rank.textContent = String(i + 1);
+
+      // textContent, never innerHTML: names are player input.
+      const name = document.createElement('span');
+      name.className = 'score-name';
+      name.textContent = row.name;
+
+      const value = document.createElement('span');
+      value.className = 'score-value';
+      value.textContent = String(row.score);
+
+      li.appendChild(rank);
+      li.appendChild(name);
+      li.appendChild(value);
+      listEl.appendChild(li);
+    });
+  }
+
+  /** What to show in the pending row while the player is still typing. */
+  function namePreview() {
+    const typed = el.nameInput.value.replace(/\s+/g, ' ').trim();
+    return typed ? typed.slice(0, CONFIG.maxNameLength) : '???';
+  }
+
+  function pendingEntry() {
+    return { name: namePreview(), score: state.pendingScore };
+  }
+
+  /**
+   * Move the pending score into the table under the entered name. Safe to call
+   * when nothing is pending, which is what lets Play Again commit implicitly.
+   */
+  function commitPendingScore() {
+    if (!state.pendingScore) return;
+
+    const name = sanitizeName(el.nameInput.value);
+    const index = insertScore(name, state.pendingScore);
+    state.pendingScore = 0;
+
+    el.nameEntry.hidden = true;
+    el.savedNote.hidden = false;
+    el.savedNote.textContent = 'Saved as ' + name;
+    el.highScore.textContent = String(topScore());
+    renderScores(el.gameoverScores, { highlight: index });
   }
 
   /* ------------------------------------------------------------------------
@@ -305,7 +467,7 @@
     state.lastSecondShown = -1;
 
     el.score.textContent = '0';
-    el.highScore.textContent = String(state.highScore);
+    el.highScore.textContent = String(topScore());
     el.timer.classList.remove('is-urgent');
 
     clearBursts();
@@ -328,20 +490,23 @@
     el.snitch.classList.add('is-hidden');
     clearBursts();
 
-    const previousBest = state.highScore;
-    const isRecord = state.score > previousBest;
-
-    if (isRecord) {
-      state.highScore = state.score;
-      saveHighScore(state.highScore);
-    }
+    const earned = qualifies(state.score);
+    state.pendingScore = earned ? state.score : 0;
 
     el.finalScore.textContent = String(state.score);
-    el.highScore.textContent = String(state.highScore);
-    el.recordNew.hidden = !isRecord;
-    el.recordOld.hidden = isRecord;
-    el.recordBest.textContent = String(state.highScore);
+    el.savedNote.hidden = true;
+    el.nameEntry.hidden = !earned;
+    el.noRecord.hidden = earned;
 
+    if (earned) {
+      el.nameInput.value = '';
+      renderScores(el.gameoverScores, { pending: pendingEntry() });
+    } else {
+      renderScores(el.gameoverScores, {});
+    }
+
+    // Deliberately not focusing the field: on a phone that would throw up the
+    // keyboard and cover the table the player just earned a place in.
     showScreen('gameover');
   }
 
@@ -349,8 +514,36 @@
      Events
      ------------------------------------------------------------------------ */
   el.btnStart.addEventListener('click', startGame);
-  el.btnRestart.addEventListener('click', startGame);
   el.snitch.addEventListener('pointerdown', onSnitchTap);
+
+  // Committing first means an unsaved qualifying score is never lost just
+  // because the player went straight back into a new game.
+  el.btnRestart.addEventListener('click', function () {
+    commitPendingScore();
+    startGame();
+  });
+
+  el.nameEntry.addEventListener('submit', function (event) {
+    event.preventDefault();
+    commitPendingScore();
+    el.nameInput.blur(); // dismiss the mobile keyboard
+  });
+
+  // Keep the provisional row in step with what is being typed.
+  el.nameInput.addEventListener('input', function () {
+    if (!state.pendingScore) return;
+    renderScores(el.gameoverScores, { pending: pendingEntry() });
+  });
+
+  el.btnScores.addEventListener('click', function () {
+    renderScores(el.scoresList, {});
+    el.scoresEmpty.hidden = scores.length > 0;
+    showScreen('scores');
+  });
+
+  el.btnScoresBack.addEventListener('click', function () {
+    showScreen('start');
+  });
 
   // Long-press on the Snitch would otherwise raise the iOS context menu.
   el.snitch.addEventListener('contextmenu', function (event) {
@@ -376,8 +569,9 @@
   /* ------------------------------------------------------------------------
      Boot
      ------------------------------------------------------------------------ */
-  state.highScore = loadHighScore();
-  el.highScore.textContent = String(state.highScore);
+  purgeLegacyScore();
+  scores = loadScores();
+  el.highScore.textContent = String(topScore());
   el.snitch.classList.add('is-hidden');
   showScreen('start');
 })();

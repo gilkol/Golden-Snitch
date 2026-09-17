@@ -100,11 +100,11 @@ body {
   display: flex;
 }
 
-/* Keep the playfield clear of the home indicator: a Snitch spawned under it
-   would compete with the system swipe-up gesture. Padding here shrinks the
-   flex child, so placement bounds pick this up automatically. */
+/* The HUD overlays the playfield so the painting can run edge-to-edge on
+   tall phones (iPhone 16 Pro). Snitch spawn bounds stay clear of the HUD
+   and the home indicator in JS. */
 #screen-game {
-  padding-bottom: var(--inset-bottom);
+  padding-bottom: 0;
 }
 
 /* Centered content column used by the start and game-over screens */
@@ -434,6 +434,11 @@ body {
    HUD
    -------------------------------------------------------------------------- */
 #hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -489,7 +494,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Playfield — the gameplay boundary. Fills all space below the HUD.
+   Playfield — full-bleed under the HUD, including the home-indicator strip.
    -------------------------------------------------------------------------- */
 #playfield {
   position: relative;
@@ -500,6 +505,7 @@ body {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
+  --snitch-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 #playfield[data-theme="night"] {
@@ -549,7 +555,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 24px;
+  padding: calc(88px + var(--inset-top)) 24px calc(24px + var(--inset-bottom));
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 45%, rgba(11, 11, 31, 0.35), rgba(11, 11, 31, 0.12) 70%);
 }

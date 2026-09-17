@@ -80,6 +80,7 @@
 
   const el = {
     playfield: document.getElementById('playfield'),
+    hud: document.getElementById('hud'),
     snitch: document.getElementById('snitch'),
     countdown: document.getElementById('countdown'),
     countdownNumber: document.getElementById('countdown-number'),
@@ -354,19 +355,29 @@
     return Number.isFinite(parsed) ? parsed : 48;
   }
 
+  /** Home-indicator inset, so the Snitch never sits under the iOS swipe-up gesture. */
+  function safeInsetBottom() {
+    const raw = getComputedStyle(el.playfield).getPropertyValue('--snitch-safe-bottom');
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
   /**
    * Movable area: the playfield inset by the Snitch's own size plus a small
    * padding, so neither the art nor its glow is ever clipped at an edge.
-   * Returned as min/max because the padding shifts the origin too.
+   * The HUD overlays the painting, and the home indicator is painted but not
+   * playable, so minY / maxY stay clear of both.
    */
   function placementBounds() {
     const size = snitchSize();
     const pad = CONFIG.edgePaddingPx;
+    const top = (el.hud ? el.hud.offsetHeight : 0) + pad;
+    const bottom = safeInsetBottom();
     return {
       minX: pad,
-      minY: pad,
+      minY: top,
       maxX: Math.max(pad, el.playfield.clientWidth - size - pad),
-      maxY: Math.max(pad, el.playfield.clientHeight - size - pad),
+      maxY: Math.max(top, el.playfield.clientHeight - size - pad - bottom),
     };
   }
 

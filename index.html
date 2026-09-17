@@ -21,7 +21,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="preload" as="image" href="bg-night.png">
+  <link rel="preload" as="image" href="bg-pitch.png">
+  <link rel="preload" as="image" href="bg-potions.png">
 </head>
 <body>
   <div id="app">
@@ -70,24 +73,6 @@
 
       <!-- Gameplay boundary: the Snitch is positioned within this box only -->
       <div id="playfield" data-theme="night">
-        <div class="scene scene--pitch" aria-hidden="true">
-          <div class="pitch-sky"></div>
-          <div class="pitch-field"></div>
-          <div class="pitch-post pitch-post--left"></div>
-          <div class="pitch-post pitch-post--right"></div>
-        </div>
-        <div class="scene scene--potions" aria-hidden="true">
-          <div class="potions-window"></div>
-          <div class="potions-shelf potions-shelf--a"></div>
-          <div class="potions-shelf potions-shelf--b"></div>
-          <span class="potions-vial v1"></span>
-          <span class="potions-vial v2"></span>
-          <span class="potions-vial v3"></span>
-          <span class="potions-vial v4"></span>
-          <span class="potions-vial v5"></span>
-          <span class="potions-vial v6"></span>
-          <span class="potions-cauldron"></span>
-        </div>
         <div class="scene-veil" aria-hidden="true"></div>
         <div id="countdown" class="countdown" hidden>
           <span id="countdown-number" class="countdown-number">5</span>
@@ -161,6 +146,6 @@
 
   </div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

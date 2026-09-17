@@ -496,160 +496,45 @@ body {
   flex: 1;
   overflow: hidden;
   touch-action: none; /* no scroll/zoom gestures competing with taps */
+  background-color: var(--night);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
-/* Decorative scenes live behind the Snitch. Night sky is the #app backdrop
-   showing through; pitch and potions paint on the playfield only. */
-.scene,
+#playfield[data-theme="night"] {
+  background-image: url("bg-night.png");
+}
+
+#playfield[data-theme="pitch"] {
+  background-image: url("bg-pitch.png");
+}
+
+#playfield[data-theme="potions"] {
+  background-image: url("bg-potions.png");
+}
+
+/* Dim the painted scenes so the gold Snitch stays the brightest object.
+   Pitch A is the brightest in the centre, so it gets a stronger veil. */
 .scene-veil {
   display: none;
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
-.scene { z-index: 0; }
-.scene-veil { z-index: 1; }
-
-#playfield[data-theme="pitch"] .scene--pitch,
-#playfield[data-theme="potions"] .scene--potions,
 #playfield[data-theme="pitch"] .scene-veil,
 #playfield[data-theme="potions"] .scene-veil {
   display: block;
 }
 
-.scene-veil {
-  background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.12), rgba(6, 6, 14, 0.62) 78%);
+#playfield[data-theme="pitch"] .scene-veil {
+  background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.28), rgba(6, 6, 14, 0.58) 78%);
 }
 
-.pitch-sky {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 0%, #4a3278, transparent 50%),
-    linear-gradient(180deg, #1c1638 0%, #24351c 50%, #132012 100%);
-}
-
-.pitch-field {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 30%;
-  bottom: 8%;
-  border-radius: 50%;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(70, 140, 55, 0.9) 0 18px,
-    rgba(52, 110, 42, 0.9) 18px 36px
-  );
-  box-shadow: inset 0 0 0 4px rgba(232, 193, 74, 0.35), 0 0 40px rgba(0, 0, 0, 0.4);
-}
-
-.pitch-post {
-  position: absolute;
-  top: 36%;
-  width: 8px;
-  height: 150px;
-  background: linear-gradient(#e8c14a, #8a6418);
-}
-
-.pitch-post--left { left: 12%; }
-.pitch-post--right { right: 12%; }
-
-.pitch-post::before,
-.pitch-post::after {
-  content: "";
-  position: absolute;
-  left: -11px;
-  width: 30px;
-  height: 30px;
-  border: 3px solid #fff3c4;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(232, 193, 74, 0.5);
-}
-
-.pitch-post::before { top: -6px; }
-.pitch-post::after { top: 48px; width: 24px; height: 24px; left: -8px; }
-
-.scene--potions {
-  background:
-    radial-gradient(circle at 50% 88%, rgba(48, 170, 90, 0.35), transparent 36%),
-    linear-gradient(180deg, #2a221c 0%, #1a1410 45%, #0c1612 100%);
-}
-
-.potions-window {
-  position: absolute;
-  top: 70px;
-  left: 50%;
-  width: 90px;
-  height: 110px;
-  margin-left: -45px;
-  border: 6px solid #3a2a1c;
-  border-radius: 8px 8px 4px 4px;
-  background: linear-gradient(180deg, #3d4a2a, #1b2418);
-  box-shadow: inset 0 0 20px rgba(180, 210, 90, 0.25), 0 0 24px rgba(90, 120, 40, 0.2);
-}
-
-.potions-shelf {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  height: 8px;
-  background: #5a3d24;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
-}
-
-.potions-shelf--a { top: 200px; }
-.potions-shelf--b { top: 270px; }
-
-.potions-vial {
-  position: absolute;
-  width: 16px;
-  height: 34px;
-  border-radius: 3px 3px 7px 7px;
-  top: 166px;
-}
-
-.potions-vial::after {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: -8px;
-  width: 8px;
-  height: 10px;
-  border-radius: 2px;
-  background: #cbb48a;
-}
-
-.v1 { left: 28px; background: #39d17a; box-shadow: 0 0 14px #39d17a; }
-.v2 { left: 56px; background: #b45cff; box-shadow: 0 0 14px #b45cff; }
-.v3 { right: 56px; background: #e8c14a; box-shadow: 0 0 14px #e8c14a; }
-.v4 { right: 28px; background: #5aa7ff; box-shadow: 0 0 14px #5aa7ff; }
-.v5 { left: 40px; top: 236px; background: #ff6b4a; box-shadow: 0 0 14px #ff6b4a; }
-.v6 { right: 40px; top: 236px; background: #7dffea; box-shadow: 0 0 14px #7dffea; }
-
-.potions-cauldron {
-  position: absolute;
-  left: 50%;
-  bottom: 36px;
-  width: 130px;
-  height: 78px;
-  margin-left: -65px;
-  border-radius: 10px 10px 60px 60px;
-  background: linear-gradient(180deg, #3a3a44, #0c0c12);
-  box-shadow: 0 0 50px rgba(60, 220, 110, 0.4);
-}
-
-.potions-cauldron::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 10px;
-  height: 20px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #b6ffc8, #1f7a42);
-  box-shadow: 0 0 22px #4dff88;
+#playfield[data-theme="potions"] .scene-veil {
+  background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.12), rgba(6, 6, 14, 0.5) 78%);
 }
 
 /* --------------------------------------------------------------------------

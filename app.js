@@ -25,6 +25,17 @@
     defaultName: 'ANON',    // used when the name field is left blank
     scoresKey: 'goldenSnitch.scores',
     legacyScoreKey: 'goldenSnitch.highScore', // pre-table number, purged on boot
+    countdownMs: 5000,
+    countdownPhrases: [
+      'Ready, Seeker?',
+      'Eyes on the Snitch!',
+      'Seekers, take your marks!',
+      'Are you ready??',
+      'Catch it if you can!',
+    ],
+    themeKey: 'goldenSnitch.theme',
+    defaultTheme: 'night',
+    themeChoices: ['night', 'pitch', 'potions'],
   };
 
   /* ------------------------------------------------------------------------
@@ -35,6 +46,10 @@
     /** score awaiting a name; 0 when there is nothing pending */
     pendingScore: 0,
     running: false,
+    /** true while the 5-second "get ready" overlay is showing */
+    countingDown: false,
+    countdownMs: 0,
+    lastPhraseIndex: -1,
     /** ms of gameplay left; decremented by the loop, frozen while hidden. */
     remainingMs: CONFIG.gameDurationMs,
     /** countdown to the next forced teleport, in ms */
@@ -43,10 +58,13 @@
     lastFrameAt: 0,
     /** last whole second painted to the HUD, so we only write on change */
     lastSecondShown: -1,
+    lastCountdownShown: -1,
     /** current snitch position within the playfield, in px */
     snitchX: 0,
     snitchY: 0,
     rafId: 0,
+    /** persisted setting: night | pitch | potions | random */
+    themeSetting: 'night',
   };
 
   /* ------------------------------------------------------------------------
@@ -57,11 +75,15 @@
     game: document.getElementById('screen-game'),
     gameover: document.getElementById('screen-gameover'),
     scores: document.getElementById('screen-scores'),
+    settings: document.getElementById('screen-settings'),
   };
 
   const el = {
     playfield: document.getElementById('playfield'),
     snitch: document.getElementById('snitch'),
+    countdown: document.getElementById('countdown'),
+    countdownNumber: document.getElementById('countdown-number'),
+    countdownPhrase: document.getElementById('countdown-phrase'),
     score: document.getElementById('score'),
     highScore: document.getElementById('high-score'),
     timer: document.getElementById('timer'),
@@ -77,6 +99,9 @@
     btnRestart: document.getElementById('btn-restart'),
     btnScores: document.getElementById('btn-scores'),
     btnScoresBack: document.getElementById('btn-scores-back'),
+    btnSettings: document.getElementById('btn-settings'),
+    btnSettingsBack: document.getElementById('btn-settings-back'),
+    themeOptions: document.querySelectorAll('.theme-option'),
   };
 
   /* ------------------------------------------------------------------------
@@ -139,6 +164,57 @@
     } catch (err) {
       /* Non-fatal: the table still holds for this session. */
     }
+  }
+
+  /* ------------------------------------------------------------------------
+     Playfield themes
+     Menus stay on the night sky. Only the playfield paints pitch/potions.
+     ------------------------------------------------------------------------ */
+  function isThemeSetting(value) {
+    return value === 'night' || value === 'pitch' || value === 'potions' || value === 'random';
+  }
+
+  function loadThemeSetting() {
+    try {
+      const raw = window.localStorage.getItem(CONFIG.themeKey);
+      if (isThemeSetting(raw)) return raw;
+    } catch (err) {
+      /* Fall through to default. */
+    }
+    return CONFIG.defaultTheme;
+  }
+
+  function saveThemeSetting(value) {
+    try {
+      window.localStorage.setItem(CONFIG.themeKey, value);
+    } catch (err) {
+      /* Non-fatal: the in-memory setting still holds for this session. */
+    }
+  }
+
+  function resolveTheme(setting) {
+    if (setting !== 'random') return setting;
+    const choices = CONFIG.themeChoices;
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
+
+  function applyPlayfieldTheme(theme) {
+    el.playfield.setAttribute('data-theme', theme);
+  }
+
+  function syncThemeButtons() {
+    el.themeOptions.forEach(function (btn) {
+      const selected = btn.getAttribute('data-theme') === state.themeSetting;
+      btn.classList.toggle('is-selected', selected);
+      btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+  }
+
+  function selectThemeSetting(value) {
+    if (!isThemeSetting(value)) return;
+    state.themeSetting = value;
+    saveThemeSetting(value);
+    syncThemeButtons();
   }
 
   function topScore() {
@@ -244,8 +320,7 @@
   }
 
   /**
-   * Move the pending score into the table under the entered name. Safe to call
-   * when nothing is pending, which is what lets Play Again commit implicitly.
+   * Move the pending score into the table under the entered name.
    */
   function commitPendingScore() {
     if (!state.pendingScore) return;
@@ -259,6 +334,12 @@
     el.savedNote.textContent = 'Saved as ' + name;
     el.highScore.textContent = String(topScore());
     renderScores(el.gameoverScores, { highlight: index });
+    setRestartReady(true);
+  }
+
+  function setRestartReady(ready) {
+    el.btnRestart.classList.toggle('is-waiting', !ready);
+    el.btnRestart.setAttribute('aria-disabled', ready ? 'false' : 'true');
   }
 
   /* ------------------------------------------------------------------------
@@ -388,7 +469,7 @@
    * and covers mouse, touch and pen in one path.
    */
   function onSnitchTap(event) {
-    if (!state.running) return; // ignore stray taps after time expires
+    if (!state.running) return; // ignore stray taps after time expires, and during countdown
     event.preventDefault();
 
     const half = snitchSize() / 2;
@@ -408,12 +489,21 @@
      A single rAF drives both the countdown and the teleport deadline, so the
      two can never drift apart.
      ------------------------------------------------------------------------ */
+  function frameDelta(now) {
+    // Never negative (warped clocks) and never more than 100ms (tab resume).
+    const delta = Math.min(Math.max(0, now - state.lastFrameAt), 100);
+    state.lastFrameAt = now;
+    return delta;
+  }
+
   function tick(now) {
+    if (state.countingDown) {
+      tickCountdown(now);
+      return;
+    }
     if (!state.running) return;
 
-    // Clamp the delta so a long frame (or a resumed tab) can't skip the clock.
-    const delta = Math.min(now - state.lastFrameAt, 100);
-    state.lastFrameAt = now;
+    const delta = frameDelta(now);
 
     state.remainingMs -= delta;
     state.teleportInMs -= delta;
@@ -457,23 +547,57 @@
   }
 
   /* ------------------------------------------------------------------------
-     Lifecycle
+     Pre-game countdown
      ------------------------------------------------------------------------ */
-  function startGame() {
-    state.score = 0;
+  function pickCountdownPhrase() {
+    const list = CONFIG.countdownPhrases;
+    let index = Math.floor(Math.random() * list.length);
+    if (list.length > 1 && index === state.lastPhraseIndex) {
+      index = (index + 1) % list.length;
+    }
+    state.lastPhraseIndex = index;
+    return list[index];
+  }
+
+  function showCountdownOverlay(seconds) {
+    el.countdown.hidden = false;
+    el.countdownNumber.textContent = String(seconds);
+    el.countdownNumber.classList.remove('is-tick');
+    void el.countdownNumber.offsetWidth;
+    el.countdownNumber.classList.add('is-tick');
+  }
+
+  function hideCountdownOverlay() {
+    el.countdown.hidden = true;
+    el.countdownNumber.classList.remove('is-tick');
+  }
+
+  function tickCountdown(now) {
+    state.countdownMs -= frameDelta(now);
+
+    if (state.countdownMs <= 0) {
+      hideCountdownOverlay();
+      beginPlay();
+      return;
+    }
+
+    const maxShown = Math.ceil(CONFIG.countdownMs / 1000);
+    const seconds = Math.min(maxShown, Math.max(1, Math.ceil(state.countdownMs / 1000)));
+    if (seconds !== state.lastCountdownShown) {
+      state.lastCountdownShown = seconds;
+      showCountdownOverlay(seconds);
+    }
+
+    state.rafId = window.requestAnimationFrame(tick);
+  }
+
+  function beginPlay() {
+    state.countingDown = false;
     state.running = true;
     state.remainingMs = CONFIG.gameDurationMs;
     state.teleportInMs = CONFIG.baseTeleportMs;
     state.lastSecondShown = -1;
 
-    el.score.textContent = '0';
-    el.highScore.textContent = String(topScore());
-    el.timer.classList.remove('is-urgent');
-
-    clearBursts();
-    showScreen('game'); // must precede placement: the playfield needs a size
-
-    // Start centred, then jump immediately so the first spot is random.
     const bounds = placementBounds();
     state.snitchX = (bounds.minX + bounds.maxX) / 2;
     state.snitchY = (bounds.minY + bounds.maxY) / 2;
@@ -484,9 +608,40 @@
     startLoop();
   }
 
+  /* ------------------------------------------------------------------------
+     Lifecycle
+     ------------------------------------------------------------------------ */
+  function startGame() {
+    state.score = 0;
+    state.running = false;
+    state.countingDown = true;
+    state.countdownMs = CONFIG.countdownMs;
+    state.lastCountdownShown = -1;
+    state.remainingMs = CONFIG.gameDurationMs;
+    state.teleportInMs = CONFIG.baseTeleportMs;
+    state.lastSecondShown = -1;
+
+    el.score.textContent = '0';
+    el.highScore.textContent = String(topScore());
+    el.timer.classList.remove('is-urgent');
+    el.timer.textContent = String(Math.ceil(CONFIG.gameDurationMs / 1000));
+
+    clearBursts();
+    el.snitch.classList.add('is-hidden');
+    applyPlayfieldTheme(resolveTheme(state.themeSetting));
+    showScreen('game'); // must precede placement: the playfield needs a size
+
+    el.countdownPhrase.textContent = pickCountdownPhrase();
+    state.lastCountdownShown = Math.ceil(CONFIG.countdownMs / 1000);
+    showCountdownOverlay(state.lastCountdownShown);
+    startLoop();
+  }
+
   function endGame() {
     state.running = false;
+    state.countingDown = false;
     stopLoop();
+    hideCountdownOverlay();
     el.snitch.classList.add('is-hidden');
     clearBursts();
 
@@ -501,8 +656,10 @@
     if (earned) {
       el.nameInput.value = '';
       renderScores(el.gameoverScores, { pending: pendingEntry() });
+      setRestartReady(false);
     } else {
       renderScores(el.gameoverScores, {});
+      setRestartReady(true);
     }
 
     // Deliberately not focusing the field: on a phone that would throw up the
@@ -516,10 +673,11 @@
   el.btnStart.addEventListener('click', startGame);
   el.snitch.addEventListener('pointerdown', onSnitchTap);
 
-  // Committing first means an unsaved qualifying score is never lost just
-  // because the player went straight back into a new game.
   el.btnRestart.addEventListener('click', function () {
-    commitPendingScore();
+    if (state.pendingScore) {
+      el.nameInput.focus();
+      return;
+    }
     startGame();
   });
 
@@ -545,6 +703,21 @@
     showScreen('start');
   });
 
+  el.btnSettings.addEventListener('click', function () {
+    syncThemeButtons();
+    showScreen('settings');
+  });
+
+  el.btnSettingsBack.addEventListener('click', function () {
+    showScreen('start');
+  });
+
+  el.themeOptions.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectThemeSetting(btn.getAttribute('data-theme'));
+    });
+  });
+
   // Long-press on the Snitch would otherwise raise the iOS context menu.
   el.snitch.addEventListener('contextmenu', function (event) {
     event.preventDefault();
@@ -557,7 +730,7 @@
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) {
       stopLoop();
-    } else if (state.running) {
+    } else if (state.running || state.countingDown) {
       startLoop();
     }
   });
@@ -571,6 +744,8 @@
      ------------------------------------------------------------------------ */
   purgeLegacyScore();
   scores = loadScores();
+  state.themeSetting = loadThemeSetting();
+  syncThemeButtons();
   el.highScore.textContent = String(topScore());
   el.snitch.classList.add('is-hidden');
   showScreen('start');

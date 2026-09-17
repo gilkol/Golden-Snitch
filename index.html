@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
   <div id="app">
@@ -46,6 +46,7 @@
 
         <button id="btn-start" class="btn" type="button">Start Game</button>
         <button id="btn-scores" class="btn btn--secondary" type="button">High Scores</button>
+        <button id="btn-settings" class="btn btn--secondary" type="button">Settings</button>
         <p class="hint">40 seconds &middot; it gets faster as you score</p>
       </div>
     </section>
@@ -68,7 +69,30 @@
       </header>
 
       <!-- Gameplay boundary: the Snitch is positioned within this box only -->
-      <div id="playfield">
+      <div id="playfield" data-theme="night">
+        <div class="scene scene--pitch" aria-hidden="true">
+          <div class="pitch-sky"></div>
+          <div class="pitch-field"></div>
+          <div class="pitch-post pitch-post--left"></div>
+          <div class="pitch-post pitch-post--right"></div>
+        </div>
+        <div class="scene scene--potions" aria-hidden="true">
+          <div class="potions-window"></div>
+          <div class="potions-shelf potions-shelf--a"></div>
+          <div class="potions-shelf potions-shelf--b"></div>
+          <span class="potions-vial v1"></span>
+          <span class="potions-vial v2"></span>
+          <span class="potions-vial v3"></span>
+          <span class="potions-vial v4"></span>
+          <span class="potions-vial v5"></span>
+          <span class="potions-vial v6"></span>
+          <span class="potions-cauldron"></span>
+        </div>
+        <div class="scene-veil" aria-hidden="true"></div>
+        <div id="countdown" class="countdown" hidden>
+          <span id="countdown-number" class="countdown-number">5</span>
+          <span id="countdown-phrase" class="countdown-phrase"></span>
+        </div>
         <div id="snitch" class="snitch" role="button" aria-label="Golden Snitch">
           <span class="snitch-wing snitch-wing--left"></span>
           <span class="snitch-wing snitch-wing--right"></span>
@@ -112,7 +136,20 @@
       </div>
     </section>
 
-    <!-- ============ Screen 4: High Scores ============ -->
+    <!-- ============ Screen 5: Settings ============ -->
+    <section id="screen-settings" class="screen">
+      <div class="panel panel--dense">
+        <h2 class="subtitle">Settings</h2>
+        <p class="hint">Playfield background</p>
+        <div class="theme-list" role="group" aria-label="Playfield background">
+          <button type="button" class="theme-option" data-theme="night">Night sky</button>
+          <button type="button" class="theme-option" data-theme="pitch">Quidditch pitch</button>
+          <button type="button" class="theme-option" data-theme="potions">Potions classroom</button>
+          <button type="button" class="theme-option" data-theme="random">Random</button>
+        </div>
+        <button id="btn-settings-back" class="btn btn--secondary" type="button">Back</button>
+      </div>
+    </section>
     <section id="screen-scores" class="screen">
       <div class="panel panel--dense">
         <h2 class="subtitle">High Scores</h2>
@@ -124,6 +161,6 @@
 
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

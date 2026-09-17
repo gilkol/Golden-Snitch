@@ -20,7 +20,7 @@
     urgentAtSeconds: 10,    // when the timer turns red
     burstSparks: 6,
     burstLifetimeMs: 500,   // must outlast the CSS spark/ring animations
-    maxScores: 10,          // table length; 11th place is forgotten
+    maxScores: 15,          // table length; 16th place is forgotten
     maxNameLength: 10,
     defaultName: 'ANON',    // used when the name field is left blank
     scoresKey: 'goldenSnitch.scores',

@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
   <link rel="preload" as="image" href="bg-night.png">
   <link rel="preload" as="image" href="bg-pitch.png">
   <link rel="preload" as="image" href="bg-potions.png">
@@ -96,7 +96,7 @@
           <span id="final-score" class="result-score">0</span>
         </div>
 
-        <!-- Shown only when the run earned a place in the top 10. -->
+        <!-- Shown only when the run earned a place in the top 15. -->
         <form id="name-entry" class="name-entry" hidden>
           <label class="record record--new" for="name-input">New high score! Enter your name</label>
           <div class="name-entry-row">
@@ -114,7 +114,7 @@
         <!-- Shown instead of the form when the run missed the table. -->
         <p id="no-record" class="record" hidden>Better Luck Next Time!</p>
 
-        <h3 class="scores-heading">Top 10</h3>
+        <h3 class="scores-heading">Top 15</h3>
         <ol id="gameover-scores" class="scores"></ol>
 
         <button id="btn-restart" class="btn" type="button">Play Again</button>
@@ -146,6 +146,6 @@
 
   </div>
 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

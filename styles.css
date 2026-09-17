@@ -123,15 +123,14 @@ body {
   text-align: center;
 }
 
-/* Panels carrying a 10-row score table need a tighter rhythm, and must cope
-   with the on-screen keyboard halving the viewport when the name field is
-   focused — hence top alignment and scroll-if-necessary rather than centring. */
+/* Panels carrying a 15-row score table need a tighter rhythm. The table
+   itself scrolls so Play Again / Back stay on screen; the panel also has to
+   cope with the keyboard shrinking the viewport when the name field is focused. */
 .panel--dense {
   gap: 13px;
   justify-content: flex-start;
   padding-top: calc(26px + var(--inset-top));
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -237,9 +236,13 @@ body {
 .scores {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  flex: 1 1 auto;
+  gap: 2px;
   width: 100%;
   max-width: 300px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   list-style: none;
 }
 
@@ -248,10 +251,10 @@ body {
   grid-template-columns: 1.75rem 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 7px 13px;
+  padding: 5px 12px;
   border-radius: 9px;
   background: rgba(61, 42, 107, 0.24);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 .score-rank {

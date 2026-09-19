@@ -23,8 +23,9 @@
     maxScores: 15,          // table length; 16th place is forgotten
     maxNameLength: 10,
     defaultName: 'ANON',    // used when the name field is left blank
-    scoresKey: 'goldenSnitch.scores',
+    scoresKey: 'goldenSnitch.scores.v2',
     legacyScoreKey: 'goldenSnitch.highScore', // pre-table number, purged on boot
+    legacyScoresKey: 'goldenSnitch.scores',   // named table before the reset, purged on boot
     countdownMs: 5000,
     countdownPhrases: [
       'Ready, Seeker?',
@@ -35,7 +36,7 @@
     ],
     themeKey: 'goldenSnitch.theme',
     defaultTheme: 'random',
-    themeChoices: ['night', 'pitch', 'potions', 'ministry', 'gryffindor', 'slytherin', 'forest'],
+    themeChoices: ['night', 'pitch', 'potions', 'ministry', 'gryffindor', 'slytherin', 'forest', 'diagon', 'hogsmeade', 'gringotts'],
   };
 
   /* ------------------------------------------------------------------------
@@ -150,13 +151,13 @@
   }
 
   /**
-   * The pre-table version stored a single unnamed number. It is deliberately
-   * not carried over, so the named table starts empty; remove it so it cannot
-   * linger in storage or be picked up again later.
+   * Older keys are deliberately not carried over, so the named table starts
+   * empty after a reset; remove them so they cannot linger or be picked up later.
    */
-  function purgeLegacyScore() {
+  function purgeLegacyScores() {
     try {
       window.localStorage.removeItem(CONFIG.legacyScoreKey);
+      window.localStorage.removeItem(CONFIG.legacyScoresKey);
     } catch (err) {
       /* Nothing we can do, and nothing depends on it. */
     }
@@ -772,7 +773,7 @@
   /* ------------------------------------------------------------------------
      Boot
      ------------------------------------------------------------------------ */
-  purgeLegacyScore();
+  purgeLegacyScores();
   scores = loadScores();
   state.themeSetting = loadThemeSetting();
   syncThemeButtons();

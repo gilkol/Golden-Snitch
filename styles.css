@@ -406,14 +406,18 @@ body {
 
 /* --------------------------------------------------------------------------
    Settings — playfield theme picker
-   Eight options must fit a phone screen under the title and Back button.
+   Eleven options must fit a phone screen under the title and Back button.
    -------------------------------------------------------------------------- */
 #screen-settings .panel--dense {
-  gap: 10px;
+  gap: 8px;
 }
 
 #screen-settings .subtitle {
-  font-size: clamp(1.45rem, 7vw, 2rem);
+  font-size: clamp(1.3rem, 6.5vw, 1.85rem);
+}
+
+#screen-settings .btn--secondary {
+  min-height: 42px;
 }
 
 .theme-list {
@@ -421,7 +425,7 @@ body {
   flex-direction: column;
   flex: 1 1 auto;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
   max-width: 300px;
   min-height: 0;
@@ -430,14 +434,14 @@ body {
 }
 
 .theme-option {
-  min-height: 40px;
-  padding: 8px 12px;
+  min-height: 34px;
+  padding: 6px 10px;
   border: 1px solid rgba(233, 238, 247, 0.28);
   border-radius: 999px;
   background: rgba(233, 238, 247, 0.06);
   color: var(--silver);
   font-family: var(--font-ui);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -562,8 +566,20 @@ body {
   background-image: url("bg-forest.png");
 }
 
+#playfield[data-theme="diagon"] {
+  background-image: url("bg-diagon.png");
+}
+
+#playfield[data-theme="hogsmeade"] {
+  background-image: url("bg-hogsmeade.png");
+}
+
+#playfield[data-theme="gringotts"] {
+  background-image: url("bg-gringotts.png");
+}
+
 /* Dim the painted scenes so the gold Snitch stays the brightest object.
-   Pitch and Ministry are the brightest in the centre, so they get a stronger veil. */
+   Pitch, Ministry, and Gringott's are the brightest in the centre. */
 .scene-veil {
   display: none;
   position: absolute;
@@ -576,18 +592,24 @@ body {
 #playfield[data-theme="potions"] .scene-veil,
 #playfield[data-theme="ministry"] .scene-veil,
 #playfield[data-theme="gryffindor"] .scene-veil,
-#playfield[data-theme="slytherin"] .scene-veil {
+#playfield[data-theme="slytherin"] .scene-veil,
+#playfield[data-theme="diagon"] .scene-veil,
+#playfield[data-theme="hogsmeade"] .scene-veil,
+#playfield[data-theme="gringotts"] .scene-veil {
   display: block;
 }
 
 #playfield[data-theme="pitch"] .scene-veil,
-#playfield[data-theme="ministry"] .scene-veil {
+#playfield[data-theme="ministry"] .scene-veil,
+#playfield[data-theme="gringotts"] .scene-veil {
   background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.28), rgba(6, 6, 14, 0.58) 78%);
 }
 
 #playfield[data-theme="potions"] .scene-veil,
 #playfield[data-theme="gryffindor"] .scene-veil,
-#playfield[data-theme="slytherin"] .scene-veil {
+#playfield[data-theme="slytherin"] .scene-veil,
+#playfield[data-theme="diagon"] .scene-veil,
+#playfield[data-theme="hogsmeade"] .scene-veil {
   background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.12), rgba(6, 6, 14, 0.5) 78%);
 }
 

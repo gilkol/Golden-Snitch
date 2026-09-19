@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=15">
   <link rel="preload" as="image" href="bg-night.png">
   <link rel="preload" as="image" href="bg-pitch.png">
   <link rel="preload" as="image" href="bg-potions.png">
@@ -122,7 +122,7 @@
         <p id="no-record" class="record" hidden>Better Luck Next Time!</p>
 
         <!-- Shown when Adult Mode is on, so the run is never saved. -->
-        <p id="adult-note" class="record" hidden>Adult Mode - this game was not saved</p>
+        <p id="adult-note" class="record" hidden>Adult Mode - this score was not saved</p>
 
         <h3 class="scores-heading">Top 15</h3>
         <ol id="gameover-scores" class="scores"></ol>
@@ -169,7 +169,8 @@
           <p class="hint">Adult Mode</p>
           <div class="adult-list" role="group" aria-label="Adult Mode">
             <button type="button" class="adult-option" data-adult="off">Off</button>
-            <button type="button" class="adult-option" data-adult="on">On - no High Score</button>
+            <button type="button" class="adult-option" data-adult="on">On</button>
+            <p class="adult-help">When Adult Mode is On, game scores will not be saved and will not be able to get onto the High Score table</p>
           </div>
           <button id="btn-adult-back" class="btn btn--secondary" type="button">Back</button>
         </div>
@@ -186,6 +187,6 @@
 
   </div>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

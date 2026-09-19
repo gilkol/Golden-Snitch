@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
   <link rel="preload" as="image" href="bg-night.png">
   <link rel="preload" as="image" href="bg-pitch.png">
   <link rel="preload" as="image" href="bg-potions.png">
@@ -121,6 +121,9 @@
         <!-- Shown instead of the form when the run missed the table. -->
         <p id="no-record" class="record" hidden>Better Luck Next Time!</p>
 
+        <!-- Shown when Adult Mode is on, so the run is never saved. -->
+        <p id="adult-note" class="record" hidden>Adult Mode - this game was not saved</p>
+
         <h3 class="scores-heading">Top 15</h3>
         <ol id="gameover-scores" class="scores"></ol>
 
@@ -135,21 +138,41 @@
     <section id="screen-settings" class="screen">
       <div class="panel panel--dense">
         <h2 class="subtitle">Settings</h2>
-        <p class="hint">Playfield background</p>
-        <div class="theme-list" role="group" aria-label="Playfield background">
-          <button type="button" class="theme-option" data-theme="random">Random</button>
-          <button type="button" class="theme-option" data-theme="night">Night Sky</button>
-          <button type="button" class="theme-option" data-theme="pitch">Quidditch Pitch</button>
-          <button type="button" class="theme-option" data-theme="potions">Potions Classroom</button>
-          <button type="button" class="theme-option" data-theme="ministry">Ministry of Magic</button>
-          <button type="button" class="theme-option" data-theme="gryffindor">Gryffindor Common Room</button>
-          <button type="button" class="theme-option" data-theme="slytherin">Slytherin Common Room</button>
-          <button type="button" class="theme-option" data-theme="forest">Forbidden Forest</button>
-          <button type="button" class="theme-option" data-theme="diagon">Diagon Alley</button>
-          <button type="button" class="theme-option" data-theme="hogsmeade">Hogsmeade</button>
-          <button type="button" class="theme-option" data-theme="gringotts">Gringott's</button>
+
+        <div id="settings-home" class="settings-pane">
+          <div class="settings-nav" role="group" aria-label="Settings">
+            <button id="btn-settings-background" class="btn btn--secondary" type="button">Background</button>
+            <button id="btn-settings-adult" class="btn btn--secondary" type="button">Adult Mode</button>
+          </div>
+          <button id="btn-settings-back" class="btn btn--secondary" type="button">Back</button>
         </div>
-        <button id="btn-settings-back" class="btn btn--secondary" type="button">Back</button>
+
+        <div id="settings-background" class="settings-pane" hidden>
+          <p class="hint">Playfield background</p>
+          <div class="theme-list" role="group" aria-label="Playfield background">
+            <button type="button" class="theme-option" data-theme="random">Random</button>
+            <button type="button" class="theme-option" data-theme="night">Night Sky</button>
+            <button type="button" class="theme-option" data-theme="pitch">Quidditch Pitch</button>
+            <button type="button" class="theme-option" data-theme="potions">Potions Classroom</button>
+            <button type="button" class="theme-option" data-theme="ministry">Ministry of Magic</button>
+            <button type="button" class="theme-option" data-theme="gryffindor">Gryffindor Common Room</button>
+            <button type="button" class="theme-option" data-theme="slytherin">Slytherin Common Room</button>
+            <button type="button" class="theme-option" data-theme="forest">Forbidden Forest</button>
+            <button type="button" class="theme-option" data-theme="diagon">Diagon Alley</button>
+            <button type="button" class="theme-option" data-theme="hogsmeade">Hogsmeade</button>
+            <button type="button" class="theme-option" data-theme="gringotts">Gringott's</button>
+          </div>
+          <button id="btn-background-back" class="btn btn--secondary" type="button">Back</button>
+        </div>
+
+        <div id="settings-adult" class="settings-pane" hidden>
+          <p class="hint">Adult Mode</p>
+          <div class="adult-list" role="group" aria-label="Adult Mode">
+            <button type="button" class="adult-option" data-adult="off">Off</button>
+            <button type="button" class="adult-option" data-adult="on">On - no High Score</button>
+          </div>
+          <button id="btn-adult-back" class="btn btn--secondary" type="button">Back</button>
+        </div>
       </div>
     </section>
     <section id="screen-scores" class="screen">
@@ -163,6 +186,6 @@
 
   </div>
 
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

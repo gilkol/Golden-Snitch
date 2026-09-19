@@ -37,6 +37,8 @@
     themeKey: 'goldenSnitch.theme',
     defaultTheme: 'random',
     themeChoices: ['night', 'pitch', 'potions', 'ministry', 'gryffindor', 'slytherin', 'forest', 'diagon', 'hogsmeade', 'gringotts'],
+    adultKey: 'goldenSnitch.adultMode',
+    defaultAdultMode: false,
   };
 
   /* ------------------------------------------------------------------------
@@ -68,6 +70,8 @@
     themeSetting: 'random',
     /** last painted playfield scene, so Random will not repeat it next round */
     lastPlayfieldTheme: '',
+    /** true when runs must not be written to the high-score table */
+    adultMode: false,
   };
 
   /* ------------------------------------------------------------------------
@@ -96,6 +100,7 @@
     nameInput: document.getElementById('name-input'),
     savedNote: document.getElementById('saved-note'),
     noRecord: document.getElementById('no-record'),
+    adultNote: document.getElementById('adult-note'),
     gameoverScores: document.getElementById('gameover-scores'),
     scoresList: document.getElementById('scores-list'),
     scoresEmpty: document.getElementById('scores-empty'),
@@ -106,7 +111,15 @@
     btnScoresBack: document.getElementById('btn-scores-back'),
     btnSettings: document.getElementById('btn-settings'),
     btnSettingsBack: document.getElementById('btn-settings-back'),
-    themeOptions: document.querySelectorAll('.theme-option'),
+    btnSettingsBackground: document.getElementById('btn-settings-background'),
+    btnSettingsAdult: document.getElementById('btn-settings-adult'),
+    btnBackgroundBack: document.getElementById('btn-background-back'),
+    btnAdultBack: document.getElementById('btn-adult-back'),
+    settingsHome: document.getElementById('settings-home'),
+    settingsBackground: document.getElementById('settings-background'),
+    settingsAdult: document.getElementById('settings-adult'),
+    themeOptions: document.querySelectorAll('#settings-background .theme-option'),
+    adultOptions: document.querySelectorAll('.adult-option'),
   };
 
   /* ------------------------------------------------------------------------
@@ -224,6 +237,50 @@
     state.themeSetting = value;
     saveThemeSetting(value);
     syncThemeButtons();
+  }
+
+  function isAdultSetting(value) {
+    return value === 'on' || value === 'off';
+  }
+
+  function loadAdultMode() {
+    try {
+      const raw = window.localStorage.getItem(CONFIG.adultKey);
+      if (isAdultSetting(raw)) return raw === 'on';
+    } catch (err) {
+      /* Fall through to default. */
+    }
+    return CONFIG.defaultAdultMode;
+  }
+
+  function saveAdultMode(on) {
+    try {
+      window.localStorage.setItem(CONFIG.adultKey, on ? 'on' : 'off');
+    } catch (err) {
+      /* Non-fatal: the in-memory setting still holds for this session. */
+    }
+  }
+
+  function syncAdultButtons() {
+    const current = state.adultMode ? 'on' : 'off';
+    el.adultOptions.forEach(function (btn) {
+      const selected = btn.getAttribute('data-adult') === current;
+      btn.classList.toggle('is-selected', selected);
+      btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+  }
+
+  function selectAdultMode(value) {
+    if (!isAdultSetting(value)) return;
+    state.adultMode = value === 'on';
+    saveAdultMode(state.adultMode);
+    syncAdultButtons();
+  }
+
+  function showSettingsPane(name) {
+    el.settingsHome.hidden = name !== 'home';
+    el.settingsBackground.hidden = name !== 'background';
+    el.settingsAdult.hidden = name !== 'adult';
   }
 
   function topScore() {
@@ -666,13 +723,14 @@
     el.snitch.classList.add('is-hidden');
     clearBursts();
 
-    const earned = qualifies(state.score);
+    const earned = !state.adultMode && qualifies(state.score);
     state.pendingScore = earned ? state.score : 0;
 
     el.finalScore.textContent = String(state.score);
     el.savedNote.hidden = true;
     el.nameEntry.hidden = !earned;
-    el.noRecord.hidden = earned;
+    el.adultNote.hidden = !state.adultMode;
+    el.noRecord.hidden = earned || state.adultMode;
 
     if (earned) {
       el.nameInput.value = '';
@@ -736,6 +794,8 @@
 
   el.btnSettings.addEventListener('click', function () {
     syncThemeButtons();
+    syncAdultButtons();
+    showSettingsPane('home');
     showScreen('settings');
   });
 
@@ -743,9 +803,33 @@
     showScreen('start');
   });
 
+  el.btnSettingsBackground.addEventListener('click', function () {
+    syncThemeButtons();
+    showSettingsPane('background');
+  });
+
+  el.btnSettingsAdult.addEventListener('click', function () {
+    syncAdultButtons();
+    showSettingsPane('adult');
+  });
+
+  el.btnBackgroundBack.addEventListener('click', function () {
+    showSettingsPane('home');
+  });
+
+  el.btnAdultBack.addEventListener('click', function () {
+    showSettingsPane('home');
+  });
+
   el.themeOptions.forEach(function (btn) {
     btn.addEventListener('click', function () {
       selectThemeSetting(btn.getAttribute('data-theme'));
+    });
+  });
+
+  el.adultOptions.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectAdultMode(btn.getAttribute('data-adult'));
     });
   });
 
@@ -776,7 +860,9 @@
   purgeLegacyScores();
   scores = loadScores();
   state.themeSetting = loadThemeSetting();
+  state.adultMode = loadAdultMode();
   syncThemeButtons();
+  syncAdultButtons();
   el.highScore.textContent = String(topScore());
   el.snitch.classList.add('is-hidden');
   showScreen('start');

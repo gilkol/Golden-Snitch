@@ -405,8 +405,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Settings — playfield theme picker
-   Eleven options must fit a phone screen under the title and Back button.
+   Settings — home, background picker, Adult Mode
    -------------------------------------------------------------------------- */
 #screen-settings .panel--dense {
   gap: 8px;
@@ -420,7 +419,31 @@ body {
   min-height: 42px;
 }
 
-.theme-list {
+.settings-pane {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.settings-nav {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.settings-nav .btn {
+  min-width: 220px;
+}
+
+.theme-list,
+.adult-list {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -433,7 +456,8 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-.theme-option {
+.theme-option,
+.adult-option {
   min-height: 34px;
   padding: 6px 10px;
   border: 1px solid rgba(233, 238, 247, 0.28);
@@ -448,14 +472,27 @@ body {
   cursor: pointer;
 }
 
-.theme-option.is-selected {
+.adult-list {
+  gap: 10px;
+}
+
+.adult-option {
+  min-height: 48px;
+  padding: 12px 18px;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+}
+
+.theme-option.is-selected,
+.adult-option.is-selected {
   border-color: rgba(232, 193, 74, 0.7);
   background: linear-gradient(180deg, rgba(232, 193, 74, 0.2), rgba(232, 193, 74, 0.07));
   color: var(--gold-bright);
   box-shadow: 0 0 18px rgba(232, 193, 74, 0.18);
 }
 
-.theme-option:focus-visible {
+.theme-option:focus-visible,
+.adult-option:focus-visible {
   outline: 2px solid var(--gold-bright);
   outline-offset: 3px;
 }

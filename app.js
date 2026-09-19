@@ -34,8 +34,8 @@
       'Catch it if you can!',
     ],
     themeKey: 'goldenSnitch.theme',
-    defaultTheme: 'night',
-    themeChoices: ['night', 'pitch', 'potions'],
+    defaultTheme: 'random',
+    themeChoices: ['night', 'pitch', 'potions', 'ministry', 'gryffindor', 'slytherin', 'forest'],
   };
 
   /* ------------------------------------------------------------------------
@@ -63,8 +63,10 @@
     snitchX: 0,
     snitchY: 0,
     rafId: 0,
-    /** persisted setting: night | pitch | potions | random */
-    themeSetting: 'night',
+    /** persisted setting: random or a specific scene */
+    themeSetting: 'random',
+    /** last painted playfield scene, so Random will not repeat it next round */
+    lastPlayfieldTheme: '',
   };
 
   /* ------------------------------------------------------------------------
@@ -98,6 +100,7 @@
     scoresEmpty: document.getElementById('scores-empty'),
     btnStart: document.getElementById('btn-start'),
     btnRestart: document.getElementById('btn-restart'),
+    btnMenu: document.getElementById('btn-menu'),
     btnScores: document.getElementById('btn-scores'),
     btnScoresBack: document.getElementById('btn-scores-back'),
     btnSettings: document.getElementById('btn-settings'),
@@ -169,10 +172,10 @@
 
   /* ------------------------------------------------------------------------
      Playfield themes
-     Menus stay on the night sky. Only the playfield paints pitch/potions.
+     Menus stay on the night sky. The playfield paints the chosen scene.
      ------------------------------------------------------------------------ */
   function isThemeSetting(value) {
-    return value === 'night' || value === 'pitch' || value === 'potions' || value === 'random';
+    return value === 'random' || CONFIG.themeChoices.indexOf(value) !== -1;
   }
 
   function loadThemeSetting() {
@@ -195,12 +198,16 @@
 
   function resolveTheme(setting) {
     if (setting !== 'random') return setting;
-    const choices = CONFIG.themeChoices;
-    return choices[Math.floor(Math.random() * choices.length)];
+    const last = state.lastPlayfieldTheme;
+    const pool = last && CONFIG.themeChoices.length > 1
+      ? CONFIG.themeChoices.filter(function (theme) { return theme !== last; })
+      : CONFIG.themeChoices;
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function applyPlayfieldTheme(theme) {
     el.playfield.setAttribute('data-theme', theme);
+    state.lastPlayfieldTheme = theme;
   }
 
   function syncThemeButtons() {
@@ -341,6 +348,8 @@
   function setRestartReady(ready) {
     el.btnRestart.classList.toggle('is-waiting', !ready);
     el.btnRestart.setAttribute('aria-disabled', ready ? 'false' : 'true');
+    el.btnMenu.classList.toggle('is-waiting', !ready);
+    el.btnMenu.setAttribute('aria-disabled', ready ? 'false' : 'true');
   }
 
   /* ------------------------------------------------------------------------
@@ -684,12 +693,22 @@
   el.btnStart.addEventListener('click', startGame);
   el.snitch.addEventListener('pointerdown', onSnitchTap);
 
-  el.btnRestart.addEventListener('click', function () {
+  function leaveGameOverIfNamed() {
     if (state.pendingScore) {
       el.nameInput.focus();
-      return;
+      return false;
     }
+    return true;
+  }
+
+  el.btnRestart.addEventListener('click', function () {
+    if (!leaveGameOverIfNamed()) return;
     startGame();
+  });
+
+  el.btnMenu.addEventListener('click', function () {
+    if (!leaveGameOverIfNamed()) return;
+    showScreen('start');
   });
 
   el.nameEntry.addEventListener('submit', function (event) {

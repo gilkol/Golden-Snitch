@@ -21,10 +21,14 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=12">
   <link rel="preload" as="image" href="bg-night.png">
   <link rel="preload" as="image" href="bg-pitch.png">
   <link rel="preload" as="image" href="bg-potions.png">
+  <link rel="preload" as="image" href="bg-ministry.png">
+  <link rel="preload" as="image" href="bg-gryffindor.png">
+  <link rel="preload" as="image" href="bg-slytherin.png">
+  <link rel="preload" as="image" href="bg-forest.png">
 </head>
 <body>
   <div id="app">
@@ -117,7 +121,10 @@
         <h3 class="scores-heading">Top 15</h3>
         <ol id="gameover-scores" class="scores"></ol>
 
-        <button id="btn-restart" class="btn" type="button">Play Again</button>
+        <div class="gameover-actions">
+          <button id="btn-restart" class="btn" type="button">Play Again</button>
+          <button id="btn-menu" class="btn btn--secondary" type="button">Main Menu</button>
+        </div>
       </div>
     </section>
 
@@ -127,10 +134,14 @@
         <h2 class="subtitle">Settings</h2>
         <p class="hint">Playfield background</p>
         <div class="theme-list" role="group" aria-label="Playfield background">
-          <button type="button" class="theme-option" data-theme="night">Night sky</button>
-          <button type="button" class="theme-option" data-theme="pitch">Quidditch pitch</button>
-          <button type="button" class="theme-option" data-theme="potions">Potions classroom</button>
           <button type="button" class="theme-option" data-theme="random">Random</button>
+          <button type="button" class="theme-option" data-theme="night">Night Sky</button>
+          <button type="button" class="theme-option" data-theme="pitch">Quidditch Pitch</button>
+          <button type="button" class="theme-option" data-theme="potions">Potions Classroom</button>
+          <button type="button" class="theme-option" data-theme="ministry">Ministry of Magic</button>
+          <button type="button" class="theme-option" data-theme="gryffindor">Gryffindor Common Room</button>
+          <button type="button" class="theme-option" data-theme="slytherin">Slytherin Common Room</button>
+          <button type="button" class="theme-option" data-theme="forest">Forbidden Forest</button>
         </div>
         <button id="btn-settings-back" class="btn btn--secondary" type="button">Back</button>
       </div>
@@ -146,6 +157,6 @@
 
   </div>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

@@ -124,7 +124,7 @@ body {
 }
 
 /* Panels carrying a 15-row score table need a tighter rhythm. The table
-   itself scrolls so Play Again / Back stay on screen; the panel also has to
+   itself scrolls so Play Again / Main Menu stay on screen; the panel also has to
    cope with the keyboard shrinking the viewport when the name field is focused. */
 .panel--dense {
   gap: 13px;
@@ -396,28 +396,51 @@ body {
   box-shadow: none;
 }
 
+.gameover-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
 /* --------------------------------------------------------------------------
    Settings — playfield theme picker
+   Eight options must fit a phone screen under the title and Back button.
    -------------------------------------------------------------------------- */
+#screen-settings .panel--dense {
+  gap: 10px;
+}
+
+#screen-settings .subtitle {
+  font-size: clamp(1.45rem, 7vw, 2rem);
+}
+
 .theme-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 6px;
   width: 100%;
-  max-width: 280px;
+  max-width: 300px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .theme-option {
-  min-height: 48px;
-  padding: 12px 18px;
+  min-height: 40px;
+  padding: 8px 12px;
   border: 1px solid rgba(233, 238, 247, 0.28);
   border-radius: 999px;
   background: rgba(233, 238, 247, 0.06);
   color: var(--silver);
   font-family: var(--font-ui);
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -523,8 +546,24 @@ body {
   background-image: url("bg-potions.png");
 }
 
+#playfield[data-theme="ministry"] {
+  background-image: url("bg-ministry.png");
+}
+
+#playfield[data-theme="gryffindor"] {
+  background-image: url("bg-gryffindor.png");
+}
+
+#playfield[data-theme="slytherin"] {
+  background-image: url("bg-slytherin.png");
+}
+
+#playfield[data-theme="forest"] {
+  background-image: url("bg-forest.png");
+}
+
 /* Dim the painted scenes so the gold Snitch stays the brightest object.
-   Pitch A is the brightest in the centre, so it gets a stronger veil. */
+   Pitch and Ministry are the brightest in the centre, so they get a stronger veil. */
 .scene-veil {
   display: none;
   position: absolute;
@@ -534,15 +573,21 @@ body {
 }
 
 #playfield[data-theme="pitch"] .scene-veil,
-#playfield[data-theme="potions"] .scene-veil {
+#playfield[data-theme="potions"] .scene-veil,
+#playfield[data-theme="ministry"] .scene-veil,
+#playfield[data-theme="gryffindor"] .scene-veil,
+#playfield[data-theme="slytherin"] .scene-veil {
   display: block;
 }
 
-#playfield[data-theme="pitch"] .scene-veil {
+#playfield[data-theme="pitch"] .scene-veil,
+#playfield[data-theme="ministry"] .scene-veil {
   background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.28), rgba(6, 6, 14, 0.58) 78%);
 }
 
-#playfield[data-theme="potions"] .scene-veil {
+#playfield[data-theme="potions"] .scene-veil,
+#playfield[data-theme="gryffindor"] .scene-veil,
+#playfield[data-theme="slytherin"] .scene-veil {
   background: radial-gradient(ellipse at 50% 42%, rgba(6, 6, 14, 0.12), rgba(6, 6, 14, 0.5) 78%);
 }
 

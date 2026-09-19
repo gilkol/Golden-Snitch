@@ -34,10 +34,8 @@
       'Are you ready??',
       'Catch it if you can!',
     ],
-    themeKey: 'goldenSnitch.theme',
     defaultTheme: 'random',
     themeChoices: ['night', 'pitch', 'potions', 'ministry', 'gryffindor', 'slytherin', 'forest', 'diagon', 'hogsmeade', 'gringotts'],
-    adultKey: 'goldenSnitch.adultMode',
     defaultAdultMode: false,
   };
 
@@ -66,11 +64,11 @@
     snitchX: 0,
     snitchY: 0,
     rafId: 0,
-    /** persisted setting: random or a specific scene */
+    /** persisted setting: random or a specific scene; reset to Random on each launch */
     themeSetting: 'random',
     /** last painted playfield scene, so Random will not repeat it next round */
     lastPlayfieldTheme: '',
-    /** true when runs must not be written to the high-score table */
+    /** true when runs must not be written to the high-score table; Off on each launch */
     adultMode: false,
   };
 
@@ -171,6 +169,8 @@
     try {
       window.localStorage.removeItem(CONFIG.legacyScoreKey);
       window.localStorage.removeItem(CONFIG.legacyScoresKey);
+      window.localStorage.removeItem('goldenSnitch.theme');
+      window.localStorage.removeItem('goldenSnitch.adultMode');
     } catch (err) {
       /* Nothing we can do, and nothing depends on it. */
     }
@@ -190,24 +190,6 @@
      ------------------------------------------------------------------------ */
   function isThemeSetting(value) {
     return value === 'random' || CONFIG.themeChoices.indexOf(value) !== -1;
-  }
-
-  function loadThemeSetting() {
-    try {
-      const raw = window.localStorage.getItem(CONFIG.themeKey);
-      if (isThemeSetting(raw)) return raw;
-    } catch (err) {
-      /* Fall through to default. */
-    }
-    return CONFIG.defaultTheme;
-  }
-
-  function saveThemeSetting(value) {
-    try {
-      window.localStorage.setItem(CONFIG.themeKey, value);
-    } catch (err) {
-      /* Non-fatal: the in-memory setting still holds for this session. */
-    }
   }
 
   function resolveTheme(setting) {
@@ -235,30 +217,11 @@
   function selectThemeSetting(value) {
     if (!isThemeSetting(value)) return;
     state.themeSetting = value;
-    saveThemeSetting(value);
     syncThemeButtons();
   }
 
   function isAdultSetting(value) {
     return value === 'on' || value === 'off';
-  }
-
-  function loadAdultMode() {
-    try {
-      const raw = window.localStorage.getItem(CONFIG.adultKey);
-      if (isAdultSetting(raw)) return raw === 'on';
-    } catch (err) {
-      /* Fall through to default. */
-    }
-    return CONFIG.defaultAdultMode;
-  }
-
-  function saveAdultMode(on) {
-    try {
-      window.localStorage.setItem(CONFIG.adultKey, on ? 'on' : 'off');
-    } catch (err) {
-      /* Non-fatal: the in-memory setting still holds for this session. */
-    }
   }
 
   function syncAdultButtons() {
@@ -273,7 +236,6 @@
   function selectAdultMode(value) {
     if (!isAdultSetting(value)) return;
     state.adultMode = value === 'on';
-    saveAdultMode(state.adultMode);
     syncAdultButtons();
   }
 
@@ -859,8 +821,6 @@
      ------------------------------------------------------------------------ */
   purgeLegacyScores();
   scores = loadScores();
-  state.themeSetting = loadThemeSetting();
-  state.adultMode = loadAdultMode();
   syncThemeButtons();
   syncAdultButtons();
   el.highScore.textContent = String(topScore());

@@ -183,6 +183,24 @@ body {
   color: rgba(155, 160, 196, 0.75);
 }
 
+#screen-start .panel {
+  gap: 14px;
+}
+
+.menu-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 36ch;
+}
+
+.menu-status p {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: rgba(155, 160, 196, 0.85);
+}
+
 /* Game over result readout */
 .result {
   display: flex;
@@ -231,6 +249,27 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-dim);
+}
+
+.scores-board {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scores-board .scores {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.scores-board .scores-heading {
+  margin-top: 8px;
 }
 
 .scores {

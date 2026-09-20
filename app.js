@@ -24,6 +24,7 @@
     maxNameLength: 10,
     defaultName: 'ANON',    // used when the name field is left blank
     scoresKey: 'goldenSnitch.scores.v2',
+    adultScoresKey: 'goldenSnitch.scores.adult',
     legacyScoreKey: 'goldenSnitch.highScore', // pre-table number, purged on boot
     legacyScoresKey: 'goldenSnitch.scores',   // named table before the reset, purged on boot
     countdownMs: 5000,
@@ -68,7 +69,7 @@
     themeSetting: 'random',
     /** last painted playfield scene, so Random will not repeat it next round */
     lastPlayfieldTheme: '',
-    /** true when runs must not be written to the high-score table; Off on each launch */
+    /** true while Adult Mode is On for this session; Off on each launch */
     adultMode: false,
   };
 
@@ -98,10 +99,12 @@
     nameInput: document.getElementById('name-input'),
     savedNote: document.getElementById('saved-note'),
     noRecord: document.getElementById('no-record'),
-    adultNote: document.getElementById('adult-note'),
+    gameoverScoresHeading: document.getElementById('gameover-scores-heading'),
     gameoverScores: document.getElementById('gameover-scores'),
     scoresList: document.getElementById('scores-list'),
     scoresEmpty: document.getElementById('scores-empty'),
+    adultScoresList: document.getElementById('adult-scores-list'),
+    adultScoresEmpty: document.getElementById('adult-scores-empty'),
     btnStart: document.getElementById('btn-start'),
     btnRestart: document.getElementById('btn-restart'),
     btnMenu: document.getElementById('btn-menu'),
@@ -118,6 +121,8 @@
     settingsAdult: document.getElementById('settings-adult'),
     themeOptions: document.querySelectorAll('#settings-background .theme-option'),
     adultOptions: document.querySelectorAll('.adult-option'),
+    menuBackground: document.getElementById('menu-background'),
+    menuAdult: document.getElementById('menu-adult'),
   };
 
   /* ------------------------------------------------------------------------
@@ -128,6 +133,20 @@
      Always kept sorted high-to-low and capped at CONFIG.maxScores.
      ------------------------------------------------------------------------ */
   let scores = [];
+  let adultScores = [];
+
+  function tableFor(adult) {
+    return adult ? adultScores : scores;
+  }
+
+  function persistTable(adult) {
+    const key = adult ? CONFIG.adultScoresKey : CONFIG.scoresKey;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(tableFor(adult)));
+    } catch (err) {
+      /* Non-fatal: the table still holds for this session. */
+    }
+  }
 
   /** Trim a name to something safe and bounded, or fall back to a default. */
   function sanitizeName(raw) {
@@ -147,11 +166,11 @@
     return { name: sanitizeName(raw.name), score: score };
   }
 
-  function loadScores() {
+  function loadScoreTable(key) {
     let list = [];
 
     try {
-      const parsed = JSON.parse(window.localStorage.getItem(CONFIG.scoresKey));
+      const parsed = JSON.parse(window.localStorage.getItem(key));
       if (Array.isArray(parsed)) list = parsed.map(parseEntry).filter(Boolean);
     } catch (err) {
       list = [];
@@ -173,14 +192,6 @@
       window.localStorage.removeItem('goldenSnitch.adultMode');
     } catch (err) {
       /* Nothing we can do, and nothing depends on it. */
-    }
-  }
-
-  function persistScores() {
-    try {
-      window.localStorage.setItem(CONFIG.scoresKey, JSON.stringify(scores));
-    } catch (err) {
-      /* Non-fatal: the table still holds for this session. */
     }
   }
 
@@ -218,6 +229,7 @@
     if (!isThemeSetting(value)) return;
     state.themeSetting = value;
     syncThemeButtons();
+    syncMenuStatus();
   }
 
   function isAdultSetting(value) {
@@ -237,6 +249,19 @@
     if (!isAdultSetting(value)) return;
     state.adultMode = value === 'on';
     syncAdultButtons();
+    syncMenuStatus();
+  }
+
+  function themeLabel() {
+    const match = Array.prototype.find.call(el.themeOptions, function (btn) {
+      return btn.getAttribute('data-theme') === state.themeSetting;
+    });
+    return match ? match.textContent : 'Random';
+  }
+
+  function syncMenuStatus() {
+    el.menuBackground.textContent = themeLabel();
+    el.menuAdult.textContent = state.adultMode ? 'On' : 'Off';
   }
 
   function showSettingsPane(name) {
@@ -246,20 +271,23 @@
   }
 
   function topScore() {
-    return scores.length ? scores[0].score : 0;
+    const table = tableFor(state.adultMode);
+    return table.length ? table[0].score : 0;
   }
 
   /** Earns a place if the table has room or the score beats the last entry. */
   function qualifies(score) {
     if (score <= 0) return false;
-    if (scores.length < CONFIG.maxScores) return true;
-    return score > scores[scores.length - 1].score;
+    const table = tableFor(state.adultMode);
+    if (table.length < CONFIG.maxScores) return true;
+    return score > table[table.length - 1].score;
   }
 
   /** Rank a score would take. Ties sit behind equal scores set earlier. */
   function rankFor(score) {
-    const at = scores.findIndex(function (entry) { return score > entry.score; });
-    return at === -1 ? scores.length : at;
+    const table = tableFor(state.adultMode);
+    const at = table.findIndex(function (entry) { return score > entry.score; });
+    return at === -1 ? table.length : at;
   }
 
   /**
@@ -267,10 +295,14 @@
    * Returns the new entry's index, or -1 if it landed outside the table.
    */
   function insertScore(name, score) {
+    const adult = state.adultMode;
+    const table = tableFor(adult).slice();
     const index = rankFor(score);
-    scores.splice(index, 0, { name: name, score: score });
-    scores = scores.slice(0, CONFIG.maxScores);
-    persistScores();
+    table.splice(index, 0, { name: name, score: score });
+    const next = table.slice(0, CONFIG.maxScores);
+    if (adult) adultScores = next;
+    else scores = next;
+    persistTable(adult);
     return index < CONFIG.maxScores ? index : -1;
   }
 
@@ -281,6 +313,7 @@
     Object.keys(screens).forEach(function (key) {
       screens[key].classList.toggle('is-active', key === name);
     });
+    if (name === 'start') syncMenuStatus();
   }
 
   /* ------------------------------------------------------------------------
@@ -294,10 +327,12 @@
    * player can see where they landed before committing a name. `options.
    * highlight` instead marks an index that is already in the table.
    */
-  function renderScores(listEl, options) {
+  function renderScores(listEl, options, adult) {
     const opts = options || {};
+    const useAdult = adult == null ? state.adultMode : adult;
+    const table = tableFor(useAdult);
 
-    const rows = scores.map(function (entry) {
+    const rows = table.map(function (entry) {
       return { name: entry.name, score: entry.score, isNew: false };
     });
 
@@ -685,14 +720,14 @@
     el.snitch.classList.add('is-hidden');
     clearBursts();
 
-    const earned = !state.adultMode && qualifies(state.score);
+    const earned = qualifies(state.score);
     state.pendingScore = earned ? state.score : 0;
 
     el.finalScore.textContent = String(state.score);
     el.savedNote.hidden = true;
     el.nameEntry.hidden = !earned;
-    el.adultNote.hidden = !state.adultMode;
-    el.noRecord.hidden = earned || state.adultMode;
+    el.noRecord.hidden = earned;
+    el.gameoverScoresHeading.textContent = state.adultMode ? 'Adult Mode' : 'Top 15';
 
     if (earned) {
       el.nameInput.value = '';
@@ -745,8 +780,10 @@
   });
 
   el.btnScores.addEventListener('click', function () {
-    renderScores(el.scoresList, {});
+    renderScores(el.scoresList, {}, false);
     el.scoresEmpty.hidden = scores.length > 0;
+    renderScores(el.adultScoresList, {}, true);
+    el.adultScoresEmpty.hidden = adultScores.length > 0;
     showScreen('scores');
   });
 
@@ -820,9 +857,11 @@
      Boot
      ------------------------------------------------------------------------ */
   purgeLegacyScores();
-  scores = loadScores();
+  scores = loadScoreTable(CONFIG.scoresKey);
+  adultScores = loadScoreTable(CONFIG.adultScoresKey);
   syncThemeButtons();
   syncAdultButtons();
+  syncMenuStatus();
   el.highScore.textContent = String(topScore());
   el.snitch.classList.add('is-hidden');
   showScreen('start');

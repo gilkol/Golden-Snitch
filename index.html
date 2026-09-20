@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
   <link rel="preload" as="image" href="bg-night.png">
   <link rel="preload" as="image" href="bg-pitch.png">
   <link rel="preload" as="image" href="bg-potions.png">
@@ -57,7 +57,12 @@
         <button id="btn-start" class="btn" type="button">Start Game</button>
         <button id="btn-scores" class="btn btn--secondary" type="button">High Scores</button>
         <button id="btn-settings" class="btn btn--secondary" type="button">Settings</button>
-        <p class="hint">40 seconds &middot; it gets faster as you score</p>
+        <div class="menu-status">
+          <p>Catch as many Snitches as you can in 40 seconds.</p>
+          <p>Snitches move faster as you score points.</p>
+          <p>Background: <span id="menu-background">Random</span></p>
+          <p>Adult Mode: <span id="menu-adult">Off</span></p>
+        </div>
       </div>
     </section>
 
@@ -121,10 +126,7 @@
         <!-- Shown instead of the form when the run missed the table. -->
         <p id="no-record" class="record" hidden>Better Luck Next Time!</p>
 
-        <!-- Shown when Adult Mode is on, so the run is never saved. -->
-        <p id="adult-note" class="record" hidden>Adult Mode - this score was not saved</p>
-
-        <h3 class="scores-heading">Top 15</h3>
+        <h3 id="gameover-scores-heading" class="scores-heading">Top 15</h3>
         <ol id="gameover-scores" class="scores"></ol>
 
         <div class="gameover-actions">
@@ -170,7 +172,7 @@
           <div class="adult-list" role="group" aria-label="Adult Mode">
             <button type="button" class="adult-option" data-adult="off">Off</button>
             <button type="button" class="adult-option" data-adult="on">On</button>
-            <p class="adult-help">When Adult Mode is On, game scores will not be saved and will not be able to get onto the High Score table</p>
+            <p class="adult-help">When Adult Mode is On, scores are saved to a separate Adult Mode high score table</p>
           </div>
           <button id="btn-adult-back" class="btn btn--secondary" type="button">Back</button>
         </div>
@@ -179,14 +181,19 @@
     <section id="screen-scores" class="screen">
       <div class="panel panel--dense">
         <h2 class="subtitle">High Scores</h2>
-        <ol id="scores-list" class="scores"></ol>
-        <p id="scores-empty" class="hint" hidden>No scores yet &mdash; go catch some Snitches!</p>
+        <div class="scores-board">
+          <ol id="scores-list" class="scores"></ol>
+          <p id="scores-empty" class="hint" hidden>No scores yet &mdash; go catch some Snitches!</p>
+          <h3 class="scores-heading">Adult Mode</h3>
+          <ol id="adult-scores-list" class="scores"></ol>
+          <p id="adult-scores-empty" class="hint" hidden>No scores yet &mdash; go catch some Snitches!</p>
+        </div>
         <button id="btn-scores-back" class="btn btn--secondary" type="button">Back</button>
       </div>
     </section>
 
   </div>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
